@@ -10,14 +10,11 @@ Application::Application() :
 	mStatisticsCountFrames{ 0 },
 	mediaDir{ RESOURCE_PATH },
 	mShape{ 100.0f },
-	mFont{}
+	mFonts{}
 {
-	if (!mFont.loadFromFile(mediaDir + "fonts/arial.ttf"))
-	{
-		// handle error
-	}
+	mFonts.load(Fonts::Main, mediaDir + "fonts/arial.ttf");
 
-	mStatisticsText.setFont(mFont);
+	mStatisticsText.setFont(mFonts.get(Fonts::Main));
 	mStatisticsText.setFillColor(sf::Color(33, 207, 79, 255));
 	mStatisticsText.setCharacterSize(11);
 

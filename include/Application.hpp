@@ -3,6 +3,9 @@
 #include "config.h"
 #include <SFML/Graphics.hpp>
 
+#include "ResourceHolder.hpp"
+#include "ResourceIdentifiers.hpp"
+
 class Application
 {
 public:
@@ -25,7 +28,8 @@ private:
     static constexpr float statisticsRefreshRate = 60;
 
     std::string mediaDir;
-    sf::Font mFont;
     // Temp:
     sf::CircleShape mShape;
+
+    FontHolder mFonts;
 };
