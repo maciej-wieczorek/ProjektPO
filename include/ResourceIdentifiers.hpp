@@ -1,5 +1,15 @@
 #pragma once
 
+// forward declarations
+namespace sf
+{
+	class Font;
+	class Texture;
+}
+template <typename Resource, typename Identifier>
+class ResourceHolder;
+//
+
 enum class Fonts
 {
 	Main
@@ -7,11 +17,8 @@ enum class Fonts
 
 enum class Textures
 {
-	Floor, Button
+	Entities, Floor, Button, Bullet, Particle
 };
-
-template <typename Resource, typename Identifier>
-class ResourceHolder;
 
 typedef ResourceHolder<sf::Font, Fonts> FontHolder;
 typedef ResourceHolder<sf::Texture, Textures> TextureHolder;

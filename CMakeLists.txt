@@ -41,6 +41,22 @@ find_package(SFML 2.5 COMPONENTS system window graphics audio REQUIRED)
 add_executable(${PROJECT_NAME}
   src/main.cpp
   src/Application.cpp
+  src/Character.cpp
+  src/Command.cpp
+  src/CommandQueue.cpp
+  src/DataTables.cpp
+  src/Entity.cpp
+  src/GameState.cpp
+  src/KeyBinding.cpp
+  src/Pickup.cpp
+  src/Player.cpp
+  src/Projectile.cpp
+  src/SceneNode.cpp
+  src/State.cpp
+  src/StateStack.cpp
+  src/TextNode.cpp
+  src/Utility.cpp
+  src/World.cpp
 )
 
 # Set include directory search paths

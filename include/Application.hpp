@@ -1,10 +1,16 @@
 #pragma once
 
 #include "config.h"
-#include <SFML/Graphics.hpp>
+#include "Utility.hpp"
 
 #include "ResourceHolder.hpp"
 #include "ResourceIdentifiers.hpp"
+#include "KeyBinding.hpp"
+#include "StateStack.hpp"
+
+#include <SFML/System/Time.hpp>
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Text.hpp>
 
 class Application
 {
@@ -19,8 +25,11 @@ private:
 	void render();
 
     void updateStatistics(sf::Time dt);
+    void registerStates();
 
     sf::RenderWindow mWindow;
+    TextureHolder mTextures;
+    FontHolder mFonts;
 
     sf::Text mStatisticsText;
     sf::Time mStatisticsUpdateTime;
@@ -28,8 +37,7 @@ private:
     static constexpr float statisticsRefreshRate = 60;
 
     std::string mediaDir;
-    // Temp:
-    sf::CircleShape mShape;
-
-    FontHolder mFonts;
+    KeyBinding mKeyBinding1;
+    KeyBinding mKeyBinding2;
+    StateStack mStateStack;
 };
