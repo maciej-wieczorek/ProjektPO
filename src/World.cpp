@@ -7,7 +7,6 @@
 #include "DataTables.hpp"
 
 #include <set>
-#include <iostream>
 
 namespace
 {
@@ -71,8 +70,6 @@ void World::update(sf::Time dt)
     adaptPlayerPosition();
     if (mCollisionCountdown > sf::Time::Zero)
         mCollisionCountdown -= dt;
-
-    std::cout << mEnemyCharacters.size() << "\n";
 }
 
 void World::draw()
@@ -246,7 +243,7 @@ void World::spawnEnemies()
 
         std::unique_ptr<Character> enemy(new Character(spawn.type, mTextures, mFonts));
         enemy->setPosition(spawn.x, spawn.y);
-        enemy->setTrackedCharacter(mPlayerCharacters[randomInt(mPlayerCharacters.size())]);
+        enemy->setTrackedCharacter(mPlayerCharacters[randomInt(static_cast<int>(mPlayerCharacters.size()))]);
 
         mEnemyCharacters.push_back(enemy.get());
         mSceneLayers[static_cast<int>(Layer::Floor)]->attachChild(std::move(enemy));
@@ -275,7 +272,7 @@ void World::guideEnemies()
         {
             Character* prey = enemy.getTrackedCharacter();
             if (prey->isKilled())
-                enemy.setTrackedCharacter(mAlivePlayers[randomInt(mAlivePlayers.size())]);
+                enemy.setTrackedCharacter(mAlivePlayers[randomInt(static_cast<int>(mAlivePlayers.size()))]);
             
             sf::Vector2f enemysPosition = enemy.getWorldPosition();
             sf::Vector2f preysPosition = prey->getWorldPosition();
