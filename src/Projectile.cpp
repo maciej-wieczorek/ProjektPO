@@ -34,7 +34,7 @@ float Projectile::getMaxSpeed() const
 
 int Projectile::getDamage() const
 {
-	return Table[getCategory()].damage;
+	return Table[static_cast<int>(mType)].damage;
 }
 
 void Projectile::updateCurrent(sf::Time dt, CommandQueue& commands)

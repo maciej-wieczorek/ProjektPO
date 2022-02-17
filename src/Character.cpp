@@ -19,6 +19,7 @@ Character::Character(Type type, const TextureHolder& textures, const FontHolder&
 	mPickupsEnabled{ true },
 	mFireRateLevel{ 1 },
 	mDropPickupCommand{},
+	mTrackedCharacter{ nullptr },
 	mID{ 0 }
 {
 	centerOrigin(mSprite);
@@ -50,9 +51,24 @@ unsigned int Character::getCategory() const
 		return static_cast<unsigned int>(Category::EnemyCharacter);
 }
 
+unsigned int Character::getType() const
+{
+	return static_cast<unsigned int>(mType);
+}
+
 sf::FloatRect Character::getBoundingRect() const
 {
 	return getWorldTransform().transformRect(mSprite.getGlobalBounds());
+}
+
+Character* Character::getTrackedCharacter()
+{
+	return mTrackedCharacter;
+}
+
+void Character::setTrackedCharacter(Character* character)
+{
+	mTrackedCharacter = character;
 }
 
 void Character::remove()
@@ -133,8 +149,8 @@ void Character::checkProjectileLaunch(sf::Time dt, CommandQueue& commands)
 void Character::createBullets(SceneNode& node, const TextureHolder& textures) const
 {
 	Projectile::Type type = isAllied() ? Projectile::Type::AlliedBullet : Projectile::Type::EnemyBullet;
-	// add create weapon spread?
-	createProjectile(node, type, 0.0f, 0.5f, textures);
+	// TODO create weapon spread
+	createProjectile(node, type, 0.0f, 0.0f, textures);
 }
 
 void Character::createProjectile(SceneNode& node, Projectile::Type type, float xOffset, float yOffset, const TextureHolder& textures) const
@@ -142,10 +158,15 @@ void Character::createProjectile(SceneNode& node, Projectile::Type type, float x
 	std::unique_ptr<Projectile> projectile(new Projectile(type, textures));
 
 	// offset for weapon
-	//sf::Vector2f offset(xOffset * mSprite.getGlobalBounds().width, yOffset * mSprite.getGlobalBounds().height);
-	//projectile->setPosition(getWorldPosition() + offset);
+	float xOff = 10.f;
+	float yOff = 20.f;
+	float angle = unitVectorAngle(getFacingDirection());
+	sf::Vector2f offset1{ std::cosf(toRadian(angle + 90.f)) * xOff, std::sinf(toRadian(angle + 90.f)) * xOff };
+	sf::Vector2f offset2{ std::sinf(toRadian(angle + 90.f)) * yOff, std::cosf(toRadian(angle - 90.f)) * yOff };
+	projectile->setPosition(getWorldPosition() + offset1 + offset2);
 
-	projectile->setPosition(getWorldPosition());
+	projectile->setFacingDirection(getFacingDirection());
+	projectile->setRotation(angle);
 	projectile->setVelocity(getFacingDirection() * projectile->getMaxSpeed());
 	node.attachChild(std::move(projectile));
 }

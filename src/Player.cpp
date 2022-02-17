@@ -34,6 +34,11 @@ void Player::handleRealtimeInput(CommandQueue& commands)
 		commands.push(mActionBinding[action]);
 }
 
+unsigned int Player::getID()
+{
+	return mID;
+}
+
 struct CharacterMover
 {
 	CharacterMover(float vx, float vy, int identifier)

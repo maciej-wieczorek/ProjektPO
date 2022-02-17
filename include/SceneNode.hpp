@@ -33,7 +33,7 @@ public:
 
 	void checkSceneCollision(SceneNode& sceneGraph, std::set<Pair>& collisionPairs);
 	void checkNodeCollision(SceneNode& node, std::set<Pair>& collisionPairs);
-	void removeWrecks();
+	void removeBodys();
 	virtual bool isMarkedForRemoval() const;
 	virtual bool isKilled() const;
 

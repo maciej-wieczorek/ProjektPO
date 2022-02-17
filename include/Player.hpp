@@ -14,6 +14,7 @@ public:
 
 	void handleEvent(const sf::Event& event, CommandQueue& commands);
 	void handleRealtimeInput(CommandQueue& commands);
+	unsigned int getID();
 
 private:
 	void initializeActions();

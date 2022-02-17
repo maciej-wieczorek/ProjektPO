@@ -2,21 +2,33 @@
 #include "config.h"
 #include "Pickup.hpp"
 #include "Projectile.hpp"
+#include "SpriteNode.hpp"
+#include "Utility.hpp"
+#include "DataTables.hpp"
 
 #include <set>
 
+namespace
+{
+    const std::vector<CharacterData> Table = initializeCharacterData();
+}
+
 World::World(sf::RenderWindow& outputTarget, FontHolder& fonts) :
     mTarget{ outputTarget },
+    mWorldDifficulty{ 1 },
     mWorldView{ outputTarget.getDefaultView() },
     mediaDir{ RESOURCE_PATH },
     mTextures{},
     mFonts{ fonts },
+    mCollisionCountdown{ sf::Time::Zero },
     mSceneGraph{},
     mSceneLayers{},
+    mPlayableArea{ mWorldView.getSize().x / 2.f, mWorldView.getSize().y / 2.f, 
+                   mWorldView.getSize().x * 1.f, mWorldView.getSize().y * 1.f },
     mWorldBounds{ 0.f, 0.f, mWorldView.getSize().x * 2.f, mWorldView.getSize().y * 2.f },
     mSpawnPosition{ mWorldBounds.width / 2.f, mWorldBounds.height / 2.f },
     mPlayerCharacters{},
-    mActiveEnemies{}
+    mAlivePlayers{}
 {
     loadTextures();
     buildScene();
@@ -30,17 +42,26 @@ void World::update(sf::Time dt)
         c->setVelocity(0.f, 0.f);
 
     destroyEntitiesOutsideView();
+    guideEnemies();
 
     while (!mCommandQueue.isEmpty())
         mSceneGraph.runCommand(mCommandQueue.pop(), dt);
 
     adaptPlayerVelocity();
+    mWorldView.setCenter(mPlayerCharacters[0]->getWorldPosition());
     handleCollisions();
 
-    mSceneGraph.removeWrecks();
+    // remove killed player character pointers
+    auto firstToRemove = std::remove_if(mPlayerCharacters.begin(), mPlayerCharacters.end(), std::mem_fn(&Character::isMarkedForRemoval));
+    mPlayerCharacters.erase(firstToRemove, mPlayerCharacters.end());
+
+    mSceneGraph.removeBodys();
+    spawnEnemies();
 
     mSceneGraph.update(dt, mCommandQueue);
     adaptPlayerPosition();
+    if (mCollisionCountdown > sf::Time::Zero)
+        mCollisionCountdown -= dt;
 }
 
 void World::draw()
@@ -61,7 +82,7 @@ CommandQueue& World::getCommandQueue()
 
 Character* World::addCharacter(int identifier)
 {
-    std::unique_ptr<Character> player(new Character(Character::Type::Character1, mTextures, mFonts));
+    std::unique_ptr<Character> player(new Character(static_cast<Character::Type>(identifier), mTextures, mFonts));
     player->setPosition(mWorldView.getCenter());
     player->setID(identifier);
 
@@ -76,13 +97,15 @@ void World::removeCharacter(int identifier)
 
 bool World::hasAlivePlayer() const
 {
-    return false;
+    return mPlayerCharacters.size() > 0;
 }
 
 void World::loadTextures()
 {
     mTextures.load(Textures::Entities, mediaDir + "textures/spritesheet_characters.png");
     mTextures.load(Textures::Bullet, mediaDir + "textures/pistol_bullet.png");
+    mTextures.load(Textures::Floor, mediaDir + "textures/floor.png");
+    mTextures.load(Textures::Grass, mediaDir + "textures/grass.png");
 }
 
 void World::adaptPlayerVelocity()
@@ -105,10 +128,10 @@ void World::adaptPlayerPosition()
     for (Character * character : mPlayerCharacters)
     {
         sf::Vector2f position = character->getPosition();
-        position.x = std::max(position.x, mWorldBounds.left + borderDistance);
-        position.x = std::min(position.x, mWorldBounds.left + mWorldBounds.width - borderDistance);
-        position.y = std::max(position.y, mWorldBounds.top + borderDistance);
-        position.y = std::min(position.y, mWorldBounds.top + mWorldBounds.height - borderDistance);
+        position.x = std::max(position.x, mPlayableArea.left + borderDistance);
+        position.x = std::min(position.x, mPlayableArea.left + mPlayableArea.width - borderDistance);
+        position.y = std::max(position.y, mPlayableArea.top + borderDistance);
+        position.y = std::min(position.y, mPlayableArea.top + mPlayableArea.height - borderDistance);
         character->setPosition(position);
     }
 }
@@ -125,7 +148,11 @@ void World::handleCollisions()
             auto& player = static_cast<Character&>(*pair.first);
             auto& enemy = static_cast<Character&>(*pair.second);
 
-            player.damage(10);
+            if (mCollisionCountdown <= sf::Time::Zero)
+            {
+                player.damage(10);
+                mCollisionCountdown += Table[enemy.getType()].fireInterval;
+            }
         }
 
         else if (matchesCategories(pair, Category::PlayerCharacter, Category::Pickup))
@@ -144,7 +171,7 @@ void World::handleCollisions()
             auto& character = static_cast<Character&>(*pair.first);
             auto& projectile = static_cast<Projectile&>(*pair.second);
 
-            // Apply projectile damage to aircraft, destroy projectile
+            // Apply projectile damage
             character.damage(projectile.getDamage());
             projectile.kill();
         }
@@ -153,7 +180,7 @@ void World::handleCollisions()
 
 void World::buildScene()
 {
-    for (std::size_t i = 0; i < static_cast<int>(Layer::LayerCount); i++)
+    for (int i = 0; i < static_cast<int>(Layer::LayerCount); i++)
     {
         Category category;
         if (i == static_cast<int>(Layer::Air))
@@ -165,15 +192,90 @@ void World::buildScene()
 
         mSceneGraph.attachChild(std::move(layer));
     }
+
+    // tiled background
+    sf::Texture& grassTexture = mTextures.get(Textures::Grass);
+    grassTexture.setRepeated(true);
+    std::unique_ptr<SpriteNode> grassSprite(new SpriteNode(grassTexture, static_cast<sf::IntRect>(mWorldBounds)));
+    grassSprite->setPosition(0.f, 0.f);
+    mSceneLayers[static_cast<int>(Layer::Background)]->attachChild(std::move(grassSprite));
+
+    sf::Texture& floorTexture = mTextures.get(Textures::Floor);
+    floorTexture.setRepeated(true);
+    std::unique_ptr<SpriteNode> floorSprite(new SpriteNode(floorTexture, static_cast<sf::IntRect>(mPlayableArea)));
+    floorSprite->setPosition(mPlayableArea.left, mPlayableArea.top);
+    mSceneLayers[static_cast<int>(Layer::Background)]->attachChild(std::move(floorSprite));
+
     addEnemies();
+}
+
+void World::addEnemy(Character::Type type, float relX, float relY)
+{
+    SpawnPoint spawn(type, mSpawnPosition.x + relX, mSpawnPosition.y + relY);
+    mEnemySpawnPoints.push_back(spawn);
 }
 
 void World::addEnemies()
 {
+    float distance = std::sqrtf(mWorldBounds.width * mWorldBounds.width +
+                                mWorldBounds.height * mWorldBounds.height);
+    distance /= 2.f;
+    for (int i = 0; i < mWorldDifficulty * 5; i++)
+    {
+        float angle = randomReal(360.f);
+        addEnemy(Character::Type::Enemy1, std::cosf(angle) * distance, std::sinf(angle) * distance);
+    }
 }
 
 void World::spawnEnemies()
 {
+    while (!mEnemySpawnPoints.empty())
+    {
+        SpawnPoint spawn = mEnemySpawnPoints.back();
+
+        std::unique_ptr<Character> enemy(new Character(spawn.type, mTextures, mFonts));
+        enemy->setPosition(spawn.x, spawn.y);
+        enemy->setTrackedCharacter(mPlayerCharacters[randomInt(mPlayerCharacters.size())]);
+
+        mSceneLayers[static_cast<int>(Layer::Floor)]->attachChild(std::move(enemy));
+
+        // Enemy is spawned, remove from the list to spawn
+        mEnemySpawnPoints.pop_back();
+    }
+}
+
+void World::guideEnemies()
+{
+    // Setup command that stores all alive players in mAlivePlayers
+    Command alivePlayersCollector;
+    alivePlayersCollector.category = static_cast<unsigned int>(Category::PlayerCharacter);
+    alivePlayersCollector.action = derivedAction<Character>([this](Character& player, sf::Time)
+    {
+        if (!player.isKilled())
+            mAlivePlayers.push_back(&player);
+    });
+
+    Command enemyGuider;
+    enemyGuider.category = static_cast<unsigned int>(Category::EnemyCharacter);
+    enemyGuider.action = derivedAction<Character>([this](Character& enemy, sf::Time)
+    {
+        if (!enemy.isKilled())
+        {
+            Character* prey = enemy.getTrackedCharacter();
+            if (prey->isKilled())
+                enemy.setTrackedCharacter(mAlivePlayers[randomInt(mAlivePlayers.size())]);
+            
+            sf::Vector2f enemysPosition = enemy.getWorldPosition();
+            sf::Vector2f preysPosition = prey->getWorldPosition();
+            sf::Vector2f direction{unitVector(sf::Vector2f(preysPosition - enemysPosition))};
+            enemy.setFacingDirection(direction);
+            enemy.setVelocity(direction * enemy.getMaxSpeed());
+        }
+    });
+
+    mCommandQueue.push(alivePlayersCollector);
+    mCommandQueue.push(enemyGuider);
+    mAlivePlayers.clear();
 }
 
 void World::destroyEntitiesOutsideView()

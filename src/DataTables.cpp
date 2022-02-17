@@ -7,7 +7,7 @@ std::vector<CharacterData> initializeCharacterData()
 {
 	std::vector<CharacterData> data(static_cast<unsigned int>(Character::Type::TypeCount));
 
-	data[static_cast<unsigned int>(Character::Type::Character1)].hitpoints = 500;
+	data[static_cast<unsigned int>(Character::Type::Character1)].hitpoints = 200;
 	data[static_cast<unsigned int>(Character::Type::Character1)].speed = 200.f;
 	data[static_cast<unsigned int>(Character::Type::Character1)].texture = Textures::Entities;
 	data[static_cast<unsigned int>(Character::Type::Character1)].textureRect = sf::IntRect(164, 88, 49, 43);
@@ -16,8 +16,8 @@ std::vector<CharacterData> initializeCharacterData()
 	data[static_cast<unsigned int>(Character::Type::Enemy1)].hitpoints = 100;
 	data[static_cast<unsigned int>(Character::Type::Enemy1)].speed = 50.f;
 	data[static_cast<unsigned int>(Character::Type::Enemy1)].texture = Textures::Entities;
-	data[static_cast<unsigned int>(Character::Type::Enemy1)].textureRect = sf::IntRect(0, 0, 48, 64);
-	data[static_cast<unsigned int>(Character::Type::Enemy1)].fireInterval = sf::Time::Zero;
+	data[static_cast<unsigned int>(Character::Type::Enemy1)].textureRect = sf::IntRect(424, 0, 35, 43);
+	data[static_cast<unsigned int>(Character::Type::Enemy1)].fireInterval = sf::milliseconds(300);
 
 	return data;
 }
@@ -28,7 +28,7 @@ std::vector<ProjectileData> initializeProjectileData()
 
 	data[static_cast<unsigned int>(Projectile::Type::AlliedBullet)].damage = 10;
 	data[static_cast<unsigned int>(Projectile::Type::AlliedBullet)].speed = 1200.f;
-	data[static_cast<unsigned int>(Projectile::Type::AlliedBullet)].texture = Textures::Entities;
+	data[static_cast<unsigned int>(Projectile::Type::AlliedBullet)].texture = Textures::Bullet;
 	data[static_cast<unsigned int>(Projectile::Type::AlliedBullet)].textureRect = sf::IntRect(0, 0, 12, 3);
 
 	data[static_cast<unsigned int>(Projectile::Type::EnemyBullet)].damage = 10;

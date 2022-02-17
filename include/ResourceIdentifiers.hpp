@@ -17,7 +17,7 @@ enum class Fonts
 
 enum class Textures
 {
-	Entities, Floor, Button, Bullet, Particle
+	Entities, Floor, Grass, Button, Bullet, Particle
 };
 
 typedef ResourceHolder<sf::Font, Fonts> FontHolder;

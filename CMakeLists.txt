@@ -47,11 +47,14 @@ add_executable(${PROJECT_NAME}
   src/DataTables.cpp
   src/Entity.cpp
   src/GameState.cpp
+  src/GameOverState.cpp
   src/KeyBinding.cpp
+  src/PauseState.cpp
   src/Pickup.cpp
   src/Player.cpp
   src/Projectile.cpp
   src/SceneNode.cpp
+  src/SpriteNode.cpp
   src/State.cpp
   src/StateStack.cpp
   src/TextNode.cpp

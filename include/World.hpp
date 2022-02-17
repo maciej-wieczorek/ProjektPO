@@ -27,6 +27,7 @@ public:
 	CommandQueue& getCommandQueue();
 	Character* addCharacter(int identifier);
 	void removeCharacter(int identifier);
+	void addEnemy(Character::Type type, float relX, float relY);
 
 	bool hasAlivePlayer() const;
 
@@ -39,6 +40,7 @@ private:
 	void buildScene();
 	void addEnemies();
 	void spawnEnemies();
+	void guideEnemies();
 	void destroyEntitiesOutsideView();
 
 	enum class Layer
@@ -64,6 +66,7 @@ private:
 	};
 
 	sf::RenderWindow& mTarget;
+	int mWorldDifficulty;
 	sf::View mWorldView;
 	std::string mediaDir;
 	TextureHolder mTextures;
@@ -71,11 +74,13 @@ private:
 	SceneNode mSceneGraph;
 	std::array<SceneNode*, static_cast<int>(Layer::LayerCount)> mSceneLayers;
 	CommandQueue mCommandQueue;
+	sf::Time mCollisionCountdown;
 	sf::FloatRect mWorldBounds;
+	sf::FloatRect mPlayableArea;
 	sf::Vector2f mSpawnPosition;
 	std::vector<Character*> mPlayerCharacters;
+	std::vector<Character*> mAlivePlayers;
 	std::vector<SpawnPoint> mEnemySpawnPoints;
-	std::vector<Character*> mActiveEnemies;
 };
 
 bool matchesCategories(SceneNode::Pair& colliders, Category type1, Category type2);

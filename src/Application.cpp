@@ -1,5 +1,7 @@
 #include "Application.hpp"
 #include "GameState.hpp"
+#include "GameOverState.hpp"
+#include "PauseState.hpp"
 
 #include <iostream>
 
@@ -16,10 +18,11 @@ Application::Application() :
 	mediaDir{ RESOURCE_PATH }
 {
 	mWindow.setKeyRepeatEnabled(false);
+	mWindow.setVerticalSyncEnabled(true);
 	mFonts.load(Fonts::Main, mediaDir + "fonts/arial.ttf");
 
 	mStatisticsText.setFont(mFonts.get(Fonts::Main));
-	mStatisticsText.setFillColor(sf::Color(33, 207, 79, 255));
+	mStatisticsText.setFillColor(sf::Color::Black);
 	mStatisticsText.setCharacterSize(11);
 
 	registerStates();
@@ -45,6 +48,8 @@ void Application::processInput()
 	sf::Event event;
 	while (mWindow.pollEvent(event))
 	{
+		mStateStack.handleEvent(event);
+
 		if (event.type == sf::Event::Closed)
 			mWindow.close();
 	}
@@ -84,4 +89,6 @@ void Application::updateStatistics(sf::Time dt)
 void Application::registerStates()
 {
 	mStateStack.registerState<GameState>(States::Game);
+	mStateStack.registerState<PauseState>(States::Pause);
+	mStateStack.registerState<GameOverState>(States::GameOver, "Koniec gry");
 }

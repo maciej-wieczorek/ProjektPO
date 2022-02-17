@@ -26,6 +26,7 @@ public:
 	Character(Type type, const TextureHolder& textures, const FontHolder& fonts);
 
 	virtual unsigned int getCategory() const;
+	unsigned int getType() const;
 	virtual sf::FloatRect getBoundingRect() const;
 	virtual void remove();
 	virtual bool isMarkedForRemoval() const;
@@ -37,6 +38,9 @@ public:
 
 	unsigned int getID() const;
 	void setID(int identifier);
+
+	Character* getTrackedCharacter();
+	void setTrackedCharacter(Character* character);
 
 	operator std::string() const;
 
@@ -65,6 +69,7 @@ private:
 	int mFireRateLevel;
 	Command mDropPickupCommand;
 	TextNode* mHealthDisplay;
+	Character* mTrackedCharacter; // enemys track players
 	unsigned int mID;
 };
 
