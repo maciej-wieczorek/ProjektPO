@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # Set project name and version
-set(PROJECT_NAME Gra)
+set(PROJECT_NAME Zombie_survivor)
 project(${PROJECT_NAME})
 
 # Set C++ standard

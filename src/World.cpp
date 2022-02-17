@@ -7,6 +7,7 @@
 #include "DataTables.hpp"
 
 #include <set>
+#include <iostream>
 
 namespace
 {
@@ -15,7 +16,7 @@ namespace
 
 World::World(sf::RenderWindow& outputTarget, FontHolder& fonts) :
     mTarget{ outputTarget },
-    mWorldDifficulty{ 1 },
+    mWorldDifficulty{ 0 },
     mWorldView{ outputTarget.getDefaultView() },
     mediaDir{ RESOURCE_PATH },
     mTextures{},
@@ -28,6 +29,7 @@ World::World(sf::RenderWindow& outputTarget, FontHolder& fonts) :
     mWorldBounds{ 0.f, 0.f, mWorldView.getSize().x * 2.f, mWorldView.getSize().y * 2.f },
     mSpawnPosition{ mWorldBounds.width / 2.f, mWorldBounds.height / 2.f },
     mPlayerCharacters{},
+    mEnemyCharacters{},
     mAlivePlayers{}
 {
     loadTextures();
@@ -52,16 +54,25 @@ void World::update(sf::Time dt)
     handleCollisions();
 
     // remove killed player character pointers
-    auto firstToRemove = std::remove_if(mPlayerCharacters.begin(), mPlayerCharacters.end(), std::mem_fn(&Character::isMarkedForRemoval));
-    mPlayerCharacters.erase(firstToRemove, mPlayerCharacters.end());
+    auto firstPlayerToRemove = std::remove_if(mPlayerCharacters.begin(), mPlayerCharacters.end(), std::mem_fn(&Character::isMarkedForRemoval));
+    mPlayerCharacters.erase(firstPlayerToRemove, mPlayerCharacters.end());
+    auto firstEnemyToRemove = std::remove_if(mEnemyCharacters.begin(), mEnemyCharacters.end(), std::mem_fn(&Character::isMarkedForRemoval));
+    mEnemyCharacters.erase(firstEnemyToRemove, mEnemyCharacters.end());
 
     mSceneGraph.removeBodys();
+    if (mEnemyCharacters.size() == 0)
+    {
+        mWorldDifficulty++;
+        addEnemies();
+    }
     spawnEnemies();
 
     mSceneGraph.update(dt, mCommandQueue);
     adaptPlayerPosition();
     if (mCollisionCountdown > sf::Time::Zero)
         mCollisionCountdown -= dt;
+
+    std::cout << mEnemyCharacters.size() << "\n";
 }
 
 void World::draw()
@@ -237,6 +248,7 @@ void World::spawnEnemies()
         enemy->setPosition(spawn.x, spawn.y);
         enemy->setTrackedCharacter(mPlayerCharacters[randomInt(mPlayerCharacters.size())]);
 
+        mEnemyCharacters.push_back(enemy.get());
         mSceneLayers[static_cast<int>(Layer::Floor)]->attachChild(std::move(enemy));
 
         // Enemy is spawned, remove from the list to spawn

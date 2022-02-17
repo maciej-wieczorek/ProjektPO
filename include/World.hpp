@@ -79,6 +79,7 @@ private:
 	sf::FloatRect mPlayableArea;
 	sf::Vector2f mSpawnPosition;
 	std::vector<Character*> mPlayerCharacters;
+	std::vector<Character*> mEnemyCharacters;
 	std::vector<Character*> mAlivePlayers;
 	std::vector<SpawnPoint> mEnemySpawnPoints;
 };
