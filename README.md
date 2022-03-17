@@ -27,4 +27,5 @@
 
    Or open generated project in IDE and build
    ```
-   
+
+![](media/gameplay.png)
